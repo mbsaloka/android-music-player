@@ -1,5 +1,6 @@
 package com.example.horegify.ui.screen.home
 
+import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,11 +38,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.horegify.data.local.AppDatabase
 import com.example.horegify.data.model.Track
+import com.example.horegify.data.repository.MusicRepository
 import com.example.horegify.ui.components.HoregifyTopBar
 import com.example.horegify.ui.components.SectionTitle
 import com.example.horegify.ui.components.TrackCard
@@ -54,10 +58,20 @@ import com.example.horegify.ui.theme.HoregifyTheme
 fun HomeScreen(
     onNavigateToPlayer: (Track) -> Unit,
     onNavigateToGenre: (String) -> Unit,
-    viewModel: HomeViewModel = viewModel(),
     isDarkTheme: Boolean,
     onToggleTheme: () -> Unit
 ) {
+    val context = LocalContext.current
+    val application = context.applicationContext as Application
+    val database = AppDatabase.getDatabase(application)
+    val trackDao = database.trackDao()
+
+    val repository = remember { MusicRepository(trackDao) }
+
+    val viewModel: HomeViewModel = viewModel(
+        factory = HomeViewModelFactory(repository)
+    )
+
     val uiState by viewModel.uiState.collectAsState()
 
     HomeScreenContent(

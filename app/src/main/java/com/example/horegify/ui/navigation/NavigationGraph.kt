@@ -30,7 +30,8 @@ fun NavigationGraph(
                     navController.navigate("player/${track.id}")
                 },
                 onNavigateToGenre = { genre ->
-                    navController.navigate("genre/$genre")
+//                    navController.navigate("genre/$genre")
+                    navController.navigate("library")
                 },
                 isDarkTheme = isDarkTheme,
                 onToggleTheme = onToggleTheme
@@ -43,7 +44,8 @@ fun NavigationGraph(
                     // Handle search query change
                 },
                 onGenreClick = { genre ->
-                    navController.navigate("genre/$genre")
+//                    navController.navigate("genre/$genre")
+                    navController.navigate("library")
                 }
             )
         }

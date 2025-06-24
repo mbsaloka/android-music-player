@@ -4,10 +4,8 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
@@ -38,6 +36,7 @@ import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import com.example.horegify.data.model.RepeatMode
 import com.example.horegify.ui.theme.HoregifyTheme
+import com.example.horegify.utils.formatTime
 import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
@@ -244,12 +243,6 @@ fun PlayerScreen(
             }
         }
     }
-}
-
-private fun formatTime(sec: Int): String {
-    val m = sec / 60
-    val s = sec % 60
-    return "%d:%02d".format(m, s)
 }
 
 @Preview(showBackground = true)
