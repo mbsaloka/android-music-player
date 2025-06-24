@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -47,8 +48,8 @@ fun TrackCardGrid(
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
-                    model = track.image,
-                    contentDescription = track.name,
+                    model = track.thumbnailUrl,
+                    contentDescription = track.title,
                     contentScale = ContentScale.Crop,
                     placeholder = ColorPainter(Color.LightGray),
                     error = ColorPainter(Color.LightGray),
@@ -61,19 +62,22 @@ fun TrackCardGrid(
             Spacer(modifier = Modifier.height(8.dp))
 
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .widthIn(max = 95.dp),
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = track.name,
+                    text = track.title,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = track.artist,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -86,9 +90,9 @@ fun TrackCardGrid(
 fun PreviewTrackCardGrid() {
     val sampleTrack = Track(
         id = "1",
-        name = "Horeg Anthem",
+        title = "Horeg Anthem",
         artist = "DJ Koplo",
-        image = "https://picsum.photos/200"
+        thumbnailUrl = "https://picsum.photos/200"
     )
 
     MaterialTheme {

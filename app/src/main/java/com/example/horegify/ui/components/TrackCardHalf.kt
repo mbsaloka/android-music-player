@@ -42,8 +42,8 @@ fun TrackCardHalf(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = track.image,
-                contentDescription = track.name,
+                model = track.thumbnailUrl,
+                contentDescription = track.title,
                 contentScale = ContentScale.Crop,
                 placeholder = ColorPainter(Color.LightGray),
                 error = ColorPainter(Color.LightGray),
@@ -57,7 +57,7 @@ fun TrackCardHalf(
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = track.name,
+                    text = track.title,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1
@@ -78,9 +78,9 @@ fun TrackCardHalf(
 fun PreviewTrackCardHalf() {
     val sampleTrack = Track(
         id = "1",
-        name = "Horeg Anthem",
+        title = "Horeg Anthem",
         artist = "DJ Koplo",
-        image = "https://picsum.photos/200"
+        thumbnailUrl = "https://picsum.photos/200"
     )
 
     MaterialTheme {

@@ -41,8 +41,9 @@ fun HoregifyTopBar(
                     fontSize = 32.sp
                 )
             )
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Ready to vibe? 🎵",
+                text = "Have a vibe! 🎵",
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontSize = 16.sp
                 )

@@ -34,6 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -85,11 +86,11 @@ fun HomeScreenContent(
                 Brush.verticalGradient(
                     listOf(
                         MaterialTheme.colorScheme.primaryContainer,
-                        MaterialTheme.colorScheme.surface,
-                        MaterialTheme.colorScheme.surface,
-                        MaterialTheme.colorScheme.surface,
-                        MaterialTheme.colorScheme.surface,
-                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.background,
                     )
                 )
             )
@@ -180,7 +181,15 @@ fun HomeScreenContent(
                                 onClick = { onNavigateToGenre(genre.lowercase()) }
                             ) {
                                 Box(
-                                    Modifier.fillMaxSize().background(Brush.horizontalGradient(colors)),
+                                    Modifier
+                                        .fillMaxSize()
+                                        .background(
+                                            Brush.radialGradient(
+                                                colors = colors,
+                                                center = Offset(0f, 0f),
+                                                radius = 300f
+                                            )
+                                        ),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(genre, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
