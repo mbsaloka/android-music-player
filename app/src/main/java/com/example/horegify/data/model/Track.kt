@@ -4,6 +4,7 @@ data class Track(
     val id: String,
     val title: String = "",
     val artist: String = "",
+    val genre: String = "",
     val album: String = "",
     val duration: Int = 0,           // in seconds
     val currentTime: Int = 0,        // in seconds

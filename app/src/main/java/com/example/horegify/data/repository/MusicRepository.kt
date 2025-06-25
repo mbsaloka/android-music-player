@@ -81,4 +81,22 @@ open class MusicRepository(
             addToFavorites(id)
         }
     }
+
+    suspend fun getTracksByGenre(genre: String): Pair<List<Track>, List<Track>> = withContext(Dispatchers.IO) {
+        val response = api.getTracksByGenre(
+            clientId = clientId,
+            genreQuery = "genre:$genre",
+            limit = 30
+        )
+
+        val tracks = response.results.map { it.toModel() }
+
+        val forYouTracks = tracks.shuffled().take(5)
+
+        val forYouIds = forYouTracks.map { it.id }.toSet()
+        val discoverCandidates = tracks.filter { it.id !in forYouIds }.shuffled()
+        val discoverTracks = discoverCandidates.take(15)
+
+        Pair(forYouTracks, discoverTracks)
+    }
 }

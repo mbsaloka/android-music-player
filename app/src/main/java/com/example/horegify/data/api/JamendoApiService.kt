@@ -36,4 +36,12 @@ interface JamendoApiService {
         @Query("format") format: String = "json",
         @Query("id") trackId: String
     ): TrackSearchResponse
+
+    @GET("tracks")
+    suspend fun getTracksByGenre(
+        @Query("client_id") clientId: String,
+        @Query("format") format: String = "json",
+        @Query("limit") limit: Int = 30,
+        @Query("search") genreQuery: String,
+    ): TrackSearchResponse
 }

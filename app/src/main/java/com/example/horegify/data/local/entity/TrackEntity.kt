@@ -9,6 +9,7 @@ data class TrackEntity(
     @PrimaryKey val id: String,
     val title: String,
     val artist: String,
+    val genre: String,
     val album: String,
     val duration: Int,
     val artworkUrl: String,

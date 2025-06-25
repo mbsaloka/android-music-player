@@ -7,7 +7,8 @@ import androidx.room.RoomDatabase
 import com.example.horegify.data.local.dao.TrackDao
 import com.example.horegify.data.local.entity.TrackEntity
 
-@Database(entities = [TrackEntity::class], version = 1)
+@Database(entities = [TrackEntity::class], version = 2
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun trackDao(): TrackDao
 
@@ -17,10 +18,11 @@ abstract class AppDatabase : RoomDatabase() {
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "horegify.db"
-                ).build().also { INSTANCE = it }
+                        context.applicationContext,
+                        AppDatabase::class.java,
+                        "horegify.db")
+                    .fallbackToDestructiveMigration()
+                    .build().also { INSTANCE = it }
             }
         }
     }

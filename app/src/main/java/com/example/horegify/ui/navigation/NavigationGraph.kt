@@ -15,6 +15,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.horegify.data.local.AppDatabase
 import com.example.horegify.data.repository.MusicRepository
+import com.example.horegify.ui.screen.genre.GenreScreen
+import com.example.horegify.ui.screen.genre.GenreViewModel
 import com.example.horegify.ui.screen.home.HomeScreen
 import com.example.horegify.ui.screen.library.LibraryScreen
 import com.example.horegify.ui.screen.player.PlayerScreen
@@ -41,8 +43,7 @@ fun NavigationGraph(
                     println("Track ID: ${track.id}")
                 },
                 onNavigateToGenre = { genre ->
-//                    navController.navigate("genre/$genre")
-                    navController.navigate("library")
+                    navController.navigate("genre/$genre")
                 },
                 isDarkTheme = isDarkTheme,
                 onToggleTheme = onToggleTheme
@@ -70,7 +71,7 @@ fun NavigationGraph(
                     navController.navigate("player/${track.id}")
                 },
                 onGenreClick = { genre ->
-                    navController.navigate("library")
+                    navController.navigate("genre/$genre")
                 }
             )
         }
@@ -90,6 +91,40 @@ fun NavigationGraph(
                 navBackStackEntry = backStackEntry
             )
             println("ID: ${backStackEntry.arguments?.getString("id")}")
+        }
+        composable(
+            route = "genre/{genreName}",
+            arguments = listOf(navArgument("genreName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val context = LocalContext.current
+            val application = context.applicationContext as Application
+            val database = AppDatabase.getDatabase(application)
+            val trackDao = database.trackDao()
+            val repository = remember { MusicRepository(trackDao) }
+
+            val genreName = backStackEntry.arguments?.getString("genreName") ?: "pop"
+
+            val factory = object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return GenreViewModel(repository, genreName) as T
+                }
+            }
+
+            val viewModel: GenreViewModel = viewModel(factory = factory)
+
+            GenreScreen(
+                viewModel = viewModel,
+                onTrackClick = { track ->
+                    navController.navigate("player/${track.id}")
+                },
+                onBack = { navController.popBackStack() },
+                onRefresh = {
+                    navController.navigate("genre/$genreName") {
+                        popUpTo("genre/$genreName") { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
