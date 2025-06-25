@@ -23,4 +23,15 @@ interface TrackDao {
 
     @Query("UPDATE tracks SET isFavorite = 0 WHERE id = :trackId")
     suspend fun removeFromFavorites(trackId: String)
+
+    @Query("SELECT CASE WHEN isFavorite IS NULL THEN 0 ELSE isFavorite END FROM tracks WHERE id = :trackId LIMIT 1")
+    fun isFavoriteTrack(trackId: String): Flow<Boolean?>
+
+    @Query("SELECT CASE WHEN isFavorite IS NULL THEN 0 ELSE isFavorite END FROM tracks WHERE id = :trackId LIMIT 1")
+    suspend fun isFavoriteTrackImmediate(trackId: String): Boolean?
+
+    // Get Track by ID
+    @Query("SELECT * FROM tracks WHERE id = :trackId LIMIT 1")
+    suspend fun getTrackById(trackId: String): TrackEntity?
+
 }

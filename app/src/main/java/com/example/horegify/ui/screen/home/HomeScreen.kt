@@ -147,7 +147,7 @@ fun HomeScreenContent(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                             contentPadding = PaddingValues(bottom = 4.dp)
                         ) {
-                            items(uiState.recentTracks) { track ->
+                            items(uiState.recentTracks.shuffled().take(4)) { track ->
                                 TrackCardHalf(track = track, onTrackClick = onNavigateToPlayer)
                             }
                         }
@@ -157,7 +157,7 @@ fun HomeScreenContent(
                 // Popular
                 if (uiState.popularTracks.isNotEmpty()) {
                     item { SectionTitle("Popular Right Now") }
-                    items(uiState.popularTracks) { track ->
+                    items(uiState.popularTracks.shuffled()) { track ->
                         TrackCard(track = track, onTrackClick = onNavigateToPlayer, onMoreClick = {}, modifier = Modifier.padding(bottom = 0.dp))
                     }
                 }

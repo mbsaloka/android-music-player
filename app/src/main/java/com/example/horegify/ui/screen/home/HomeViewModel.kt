@@ -27,7 +27,8 @@ class HomeViewModel(private val repository: MusicRepository) : ViewModel() {
             try {
                 val popularTracks = repository.getPopularTracks()
                 val recommendedTracks = repository.getRecommendedTracks()
-                val recent = repository.getRecentlyPlayedTracks().first()
+//                val recent = repository.getRecentlyPlayedTracks().first()
+                val recent = repository.getRecommendedTracks()
 
                 _uiState.value = HomeUiState(
                     isLoading = false,

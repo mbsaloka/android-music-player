@@ -22,5 +22,6 @@ fun TrackEntity.toTrack() = Track(
     album = album,
     duration = duration,
     artworkUrl = artworkUrl,
-    thumbnailUrl = thumbnailUrl
+    thumbnailUrl = thumbnailUrl,
+    isFavorite = isFavorite
 )

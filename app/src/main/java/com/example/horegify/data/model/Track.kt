@@ -12,5 +12,6 @@ data class Track(
     val repeatMode: RepeatMode = RepeatMode.OFF,
     val volume: Int = 75,            // 0–100
     val artworkUrl: String = "",
-    val thumbnailUrl: String = ""
+    val thumbnailUrl: String = "",
+    val isFavorite: Boolean = false,
 )

@@ -1,6 +1,7 @@
 package com.example.horegify.ui.screen.player
 
 import android.annotation.SuppressLint
+import android.app.Application
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.PlayCircle
@@ -26,15 +28,19 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
+import com.example.horegify.data.local.AppDatabase
 import com.example.horegify.data.model.RepeatMode
+import com.example.horegify.data.repository.MusicRepository
 import com.example.horegify.ui.theme.HoregifyTheme
 import com.example.horegify.utils.formatTime
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,17 +48,54 @@ import kotlinx.coroutines.flow.MutableStateFlow
 @Composable
 fun PlayerScreen(
     onBack: () -> Unit,
-    viewModel: PlayerViewModel = viewModel()
+    navBackStackEntry: NavBackStackEntry
 ) {
-    val ui = viewModel.uiState.collectAsState().value
+    val context = LocalContext.current
+    val application = context.applicationContext as Application
+    val database = AppDatabase.getDatabase(application)
+    val trackDao = database.trackDao()
 
+    val repository = remember { MusicRepository(trackDao) }
+
+    val viewModel: PlayerViewModel = viewModel(
+        navBackStackEntry,
+        factory = PlayerViewModelFactory(repository, navBackStackEntry)
+    )
+
+    val uiState by viewModel.uiState.collectAsState()
+
+    PlayerScreenContent(
+        uiState = uiState,
+        onBack = onBack,
+        onTogglePlayPause = viewModel::togglePlayPause,
+        onToggleShuffle = viewModel::toggleShuffle,
+        onToggleRepeat = viewModel::toggleRepeat,
+        onSeekTo = viewModel::seekTo,
+        onSetVolume = viewModel::setVolume,
+        onFavoriteClick = viewModel::toggleFavorite,
+        isFavorite = viewModel.isFavorite.collectAsState().value
+    )
+}
+
+@Composable
+fun PlayerScreenContent(
+    uiState: PlayerUiState,
+    onBack: () -> Unit,
+    onTogglePlayPause: () -> Unit,
+    onToggleShuffle: () -> Unit,
+    onToggleRepeat: () -> Unit,
+    onSeekTo: (Int) -> Unit,
+    onSetVolume: (Int) -> Unit,
+    onFavoriteClick: () -> Unit,
+    isFavorite: Boolean = false
+) {
     val gradientBrush = Brush.verticalGradient(
         colorStops = arrayOf(
-            0.0f to MaterialTheme.colorScheme.primary, // 0% - Dark Blue
-            0.2f to MaterialTheme.colorScheme.primary, // 40% - Dark Blue
-            0.4f to Color(0xFF864FDA),                 // 50% - Purple
-            0.9f to MaterialTheme.colorScheme.primary, // 60% - Dark Blue
-            1.0f to MaterialTheme.colorScheme.primary  // 100% - Dark Blue
+            0.0f to MaterialTheme.colorScheme.primary,
+            0.2f to MaterialTheme.colorScheme.primary,
+            0.4f to Color(0xFF864FDA),
+            0.9f to MaterialTheme.colorScheme.primary,
+            1.0f to MaterialTheme.colorScheme.primary
         )
     )
 
@@ -77,7 +120,10 @@ fun PlayerScreen(
                 IconButton(onClick = { onBack() }) {
                     Icon(Icons.Default.ExpandMore, contentDescription = "Back", tint = Color.White)
                 }
-                Text("RECOMMENDED FOR YOU", style = MaterialTheme.typography.labelLarge.copy(color = Color.White))
+                Text(
+                    "RECOMMENDED FOR YOU",
+                    style = MaterialTheme.typography.labelLarge.copy(color = Color.White)
+                )
                 IconButton(onClick = { /* More */ }) {
                     Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color.White)
                 }
@@ -85,20 +131,19 @@ fun PlayerScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            val painter: Painter = rememberAsyncImagePainter(model = ui.thumbnailUrl)
+            val painter = rememberAsyncImagePainter(model = uiState.thumbnailUrl)
             val isPlaceholder = painter is AsyncImagePainter && painter.state is AsyncImagePainter.State.Empty
 
             Box(
                 modifier = Modifier
                     .size(300.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color.LightGray)
+                    .background(Color.LightGray, shape = RoundedCornerShape(24.dp))
             ) {
                 if (!isPlaceholder) {
                     Image(
                         painter = painter,
-                        contentDescription = ui.title,
-                        contentScale = ContentScale.Crop,
+                        contentDescription = uiState.title,
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -111,38 +156,36 @@ fun PlayerScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = ui.title,
+                        text = uiState.title,
                         style = MaterialTheme.typography.headlineMedium.copy(color = Color.White),
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                     Text(
-                        text = ui.artist,
+                        text = uiState.artist,
                         style = MaterialTheme.typography.bodyLarge.copy(color = Color.White.copy(alpha = 0.7f)),
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
-                IconButton(onClick = { /* Favorite toggle */ }) {
+                IconButton(onClick = onFavoriteClick) {
                     Icon(
-                        imageVector = Icons.Default.Favorite,
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Favorite",
-                        tint = Color.Red
+                        tint = if (isFavorite) Color.Red else Color.White.copy(alpha = 0.6f)
                     )
                 }
             }
 
             Spacer(Modifier.height(16.dp))
 
-            // Seek Bar (music progress)
+            // Seek Bar
             Slider(
-                value = ui.currentTime.toFloat(),
-                onValueChange = { viewModel.seekTo(it.toInt()) },
-                valueRange = 0f..ui.duration.toFloat(),
+                value = uiState.currentTime.toFloat(),
+                onValueChange = { onSeekTo(it.toInt()) },
+                valueRange = 0f..uiState.duration.toFloat(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(18.dp),
@@ -159,8 +202,14 @@ fun PlayerScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(formatTime(ui.currentTime), style = MaterialTheme.typography.bodySmall.copy(color = Color.White))
-                Text(formatTime(ui.duration), style = MaterialTheme.typography.bodySmall.copy(color = Color.White))
+                Text(
+                    formatTime(uiState.currentTime),
+                    style = MaterialTheme.typography.bodySmall.copy(color = Color.White)
+                )
+                Text(
+                    formatTime(uiState.duration),
+                    style = MaterialTheme.typography.bodySmall.copy(color = Color.White)
+                )
             }
 
             Spacer(Modifier.height(16.dp))
@@ -170,22 +219,22 @@ fun PlayerScreen(
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = viewModel::toggleShuffle) {
+                IconButton(onClick = onToggleShuffle) {
                     Icon(
                         imageVector = Icons.Default.Shuffle,
                         contentDescription = "Shuffle",
-                        tint = if (ui.isShuffled) Color.White else Color.White.copy(alpha = 0.5f)
+                        tint = if (uiState.isShuffled) Color.White else Color.White.copy(alpha = 0.5f)
                     )
                 }
                 IconButton(onClick = { /* prev */ }) {
                     Icon(Icons.Default.SkipPrevious, contentDescription = "Prev", tint = Color.White)
                 }
                 IconButton(
-                    onClick = viewModel::togglePlayPause,
+                    onClick = onTogglePlayPause,
                     modifier = Modifier.size(64.dp)
                 ) {
                     Icon(
-                        imageVector = if (ui.isPlaying) Icons.Default.PauseCircle else Icons.Default.PlayCircle,
+                        imageVector = if (uiState.isPlaying) Icons.Default.PauseCircle else Icons.Default.PlayCircle,
                         contentDescription = "Play/Pause",
                         tint = Color.White,
                         modifier = Modifier.size(64.dp)
@@ -194,11 +243,11 @@ fun PlayerScreen(
                 IconButton(onClick = { /* next */ }) {
                     Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White)
                 }
-                IconButton(onClick = viewModel::toggleRepeat) {
+                IconButton(onClick = onToggleRepeat) {
                     Icon(
                         imageVector = Icons.Default.Repeat,
                         contentDescription = "Repeat",
-                        tint = if (ui.repeatMode != RepeatMode.OFF) Color.White else Color.White.copy(alpha = 0.5f)
+                        tint = if (uiState.repeatMode != RepeatMode.OFF) Color.White else Color.White.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -221,8 +270,8 @@ fun PlayerScreen(
                     )
                     Spacer(Modifier.width(8.dp))
                     Slider(
-                        value = ui.volume.toFloat(),
-                        onValueChange = { viewModel.setVolume(it.toInt()) },
+                        value = uiState.volume.toFloat(),
+                        onValueChange = { onSetVolume(it.toInt()) },
                         valueRange = 0f..100f,
                         modifier = Modifier
                             .weight(1f)
@@ -235,7 +284,7 @@ fun PlayerScreen(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        "${ui.volume}",
+                        "${uiState.volume}",
                         color = Color.White,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -245,34 +294,34 @@ fun PlayerScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewPlayerScreen() {
-    val previewViewModel = object : ViewModel() {
-        val uiState = MutableStateFlow(
-            PlayerUiState(
-                id = "5",
-                title = "Blinding Lights",
-                artist = "The Weeknd",
-                album = "After Hours",
-                duration = 200,
-                currentTime = 45,
-                isPlaying = true,
-                isShuffled = false,
-                repeatMode = com.example.horegify.data.model.RepeatMode.ONE,
-                volume = 80,
-                artworkUrl = "https://picsum.photos/300",
-                thumbnailUrl = "https://picsum.photos/100"
-            )
-        )
-    }
-
-    HoregifyTheme {
-        PlayerScreen(
-            onBack = {},
-            viewModel = object : PlayerViewModel(SavedStateHandle()) {
-                override val uiState = previewViewModel.uiState
-            }
-        )
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewPlayerScreen() {
+//    val previewViewModel = object : ViewModel() {
+//        val uiState = MutableStateFlow(
+//            PlayerUiState(
+//                id = "5",
+//                title = "Blinding Lights",
+//                artist = "The Weeknd",
+//                album = "After Hours",
+//                duration = 200,
+//                currentTime = 45,
+//                isPlaying = true,
+//                isShuffled = false,
+//                repeatMode = com.example.horegify.data.model.RepeatMode.ONE,
+//                volume = 80,
+//                artworkUrl = "https://picsum.photos/300",
+//                thumbnailUrl = "https://picsum.photos/100"
+//            )
+//        )
+//    }
+//
+//    HoregifyTheme {
+//        PlayerScreen(
+//            onBack = {},
+//            viewModel = object : PlayerViewModel(SavedStateHandle(), ) {
+//                override val uiState = previewViewModel.uiState
+//            }
+//        )
+//    }
+//}

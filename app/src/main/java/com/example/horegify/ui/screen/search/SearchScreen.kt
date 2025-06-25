@@ -2,10 +2,15 @@ package com.example.horegify.ui.screen.search
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -14,7 +19,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.horegify.data.model.Track
 import com.example.horegify.ui.components.SearchBar
+import com.example.horegify.ui.components.TrackCardHalf
 import com.example.horegify.ui.screen.search.SearchViewModel
 import com.example.horegify.ui.theme.HoregifyTheme
 
@@ -22,6 +29,8 @@ import com.example.horegify.ui.theme.HoregifyTheme
 fun SearchScreen(
     query: String,
     onQueryChange: (String) -> Unit,
+    searchResults: List<Track>,
+    onTrackClick: (Track) -> Unit,
     onGenreClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -64,47 +73,70 @@ fun SearchScreen(
                 .padding(horizontal = 16.dp)
         )
 
-        Text(
-            "Browse All",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(16.dp)
-        )
+        if (query.isNotBlank()) {
+            Text(
+                "Results for \"$query\"",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(16.dp)
+            )
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            items(genres) { (genre, colors) ->
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    onClick = { onGenreClick(genre.lowercase()) },
-                    modifier = Modifier
-                        .height(100.dp)
-                        .fillMaxWidth()
-                ) {
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.radialGradient(
-                                    colors = colors,
-                                    center = Offset(0f, 0f),
-                                    radius = 600f
-                                )
-                            ),
-                        contentAlignment = Alignment.BottomStart
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                items(searchResults) { track ->
+                    TrackCardHalf(
+                        track = track,
+                        onTrackClick = onTrackClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    )
+                }
+            }
+        } else {
+            Text(
+                "Browse All",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(16.dp)
+            )
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                items(genres) { (genre, colors) ->
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        onClick = { onGenreClick(genre.lowercase()) },
+                        modifier = Modifier
+                            .height(100.dp)
+                            .fillMaxWidth()
                     ) {
-                        Text(
-                            genre,
-                            fontSize = 20.sp,
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Black,
-                            modifier = Modifier.padding(20.dp)
-                        )
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.radialGradient(
+                                        colors = colors,
+                                        center = Offset(0f, 0f),
+                                        radius = 600f
+                                    )
+                                ),
+                            contentAlignment = Alignment.BottomStart
+                        ) {
+                            Text(
+                                genre,
+                                fontSize = 20.sp,
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Black,
+                                modifier = Modifier.padding(20.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -112,29 +144,36 @@ fun SearchScreen(
     }
 }
 
+
 @Composable
 fun SearchScreenWithViewModel(
     viewModel: SearchViewModel = viewModel(),
+    onTrackClick: (Track) -> Unit,
     onGenreClick: (String) -> Unit
 ) {
     val query by viewModel.searchQuery.collectAsState()
+    val searchResults by viewModel.searchResults.collectAsState(initial = emptyList())
+
     SearchScreen(
         query = query,
         onQueryChange = viewModel::onSearchQueryChange,
+        searchResults = searchResults,
+        onTrackClick = onTrackClick,
         onGenreClick = onGenreClick
     )
 }
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewSearchScreen() {
-    var query by remember { mutableStateOf("") }
-
-    HoregifyTheme {
-        SearchScreen(
-            query = query,
-            onQueryChange = { query = it },
-            onGenreClick = {}
-        )
-    }
-}
+//
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewSearchScreen() {
+//    var query by remember { mutableStateOf("") }
+//
+//    HoregifyTheme {
+//        SearchScreen(
+//            query = query,
+//            onQueryChange = { query = it },
+//            onGenreClick = {},
+//
+//        )
+//    }
+//}

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-class MusicRepository(
+open class MusicRepository(
     private val dao: TrackDao,
     private val clientId: String = "e83eeada"
 ) {
@@ -19,7 +19,11 @@ class MusicRepository(
 
     // 1. GET Recommended Tracks (Random)
     suspend fun getRecommendedTracks(): List<Track> = withContext(Dispatchers.IO) {
-        api.getTracks(clientId, limit = 10).results.map { it.toModel() }
+        val limit = 10
+        val totalTrackCount = 1000
+        val maxOffset = totalTrackCount - limit
+        val randomOffset = (0..maxOffset).random()
+        api.getTracks(clientId, limit = limit, offset = randomOffset).results.map { it.toModel() }
     }
 
     // 2. GET Popular Tracks (fallback to latest if not available)
@@ -56,5 +60,25 @@ class MusicRepository(
     // 8. Favorite Tracks (REMOVE)
     suspend fun removeFromFavorites(trackId: String) {
         dao.removeFromFavorites(trackId)
+    }
+
+    // 9. Get Track by ID
+    suspend fun getTrackById(id: String): Track? = withContext(Dispatchers.IO) {
+        api.getTrackById(clientId, trackId = id).results.firstOrNull()?.toModel()
+    }
+
+    // 10. Favorite Toggle
+    fun isFavorite(trackId: String): Flow<Boolean> {
+        return dao.isFavoriteTrack(trackId)
+            .map { it ?: false }
+    }
+
+    suspend fun toggleFavorite(id: String) {
+        val isCurrentlyFavorite = dao.isFavoriteTrackImmediate(id) ?: false
+        if (isCurrentlyFavorite) {
+            removeFromFavorites(id)
+        } else {
+            addToFavorites(id)
+        }
     }
 }
